@@ -419,10 +419,10 @@ h3 {
 
 .slide {
   display: none;
-  padding: 3rem 2.5rem;
+  padding: 3.5rem 2.5rem;
   text-align: center;
   background: linear-gradient(to bottom right, #ffffff, #f8fafc);
-  min-height: 480px;
+  min-height: 580px;
 }
 
 .slide.active {
@@ -927,7 +927,7 @@ h3 {
 
   .slide {
     padding: 2rem 1.5rem;
-    min-height: 380px;
+    min-height: 440px;
   }
 
   .abstract-box {

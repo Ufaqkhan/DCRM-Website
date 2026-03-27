@@ -89,30 +89,21 @@
         </div>
         <div class="abstract-box">
           <p>
-            Medical imaging presents significant challenges due to acoustic shadows, motion blur, and indistinct
-            boundaries between anatomical structures. Pre-trained Vision Transformers (ViTs) offer strong
-            general-purpose
-            feature representations, but adapting them to specialized domains — particularly medical imaging — typically
-            requires extensive fine-tuning that risks degrading their original capabilities. We introduce
-            <strong>DCRM-ViT
-              (Domain-Routed Conditional Residual Modulation for Vision Transformers)</strong>, a framework that keeps
-            the
-            ViT backbone entirely frozen while learning lightweight, input-conditioned residual corrections.
-          </p>
-          <p>
-            A <strong>domain router</strong> predicts soft domain membership weights from the input features. A
-            <strong>parameter synthesizer network (PSN)</strong> converts these weights into low-rank residual
-            parameters
-            that are injected into <strong>residual modulation blocks (RMBs)</strong> attached to selected transformer
-            layers. The entire system is trained end-to-end via <strong>bi-level optimization</strong>: an inner loop
-            adapts task-specific parameters while an outer loop learns routing, synthesis, and initialization so that
-            corrections generalize across domains.
-          </p>
-          <p>
-            DCRM-ViT achieves state-of-the-art results across <strong>fine-grained classification, zero-shot
-              evaluation, cross-domain transfer, and medical image segmentation</strong> — all while adding only 3.3M
-            trainable parameters and requiring no test-time updates. The method demonstrates that domain-aware,
-            sample-level modulation of a frozen backbone is a powerful and efficient alternative to full fine-tuning.
+            Medical imaging remains challenging due to acoustic shadows, motion blur, and indistinct boundaries, while
+            adapting vision models to such domains often requires heavy task-specific fine-tuning and can degrade
+            general-image capability. We propose <strong>DCRM-ViT</strong>, a domain-conditioned residual modulation
+            framework for Vision Transformers that preserves general-vision knowledge while adapting to diverse medical
+            and natural domains. DCRM-ViT keeps the backbone frozen and augments each block with lightweight Residual
+            Modulation Blocks (RMBs), whose parameters are synthesized per sample by a Domain Router (DR) and a
+            Parameter Synthesizer Network (PSN). The DR predicts soft domain weights from input features, and the PSN
+            maps them to low-rank residuals that modulate selected projections and optionally add a domain-aware
+            attention bias. We train the model with a bi-level optimization scheme, where an inner loop adapts RMBs to
+            task supervision and an outer loop updates DR, PSN, and RMB initialization to improve cross-domain
+            generalization. Across fine-grained classification (Food101, SUN397, Stanford Cars) and medical segmentation
+            (ultrasound, CT, MRI), DCRM-ViT consistently outperforms strong baselines with modest trainable compute.
+            Ablation studies confirm the contribution of the proposed components. Overall, DCRM-ViT achieves strong
+            cross-domain performance with low overhead, requiring only <strong>4.7 GFLOPs</strong> and <strong>0.3
+              min/epoch</strong>.
           </p>
         </div>
       </div>
@@ -124,79 +115,181 @@
         <div class="section-heading center">
           <p class="section-label">Interactive Teaser</p>
           <h2>A guided walkthrough of DCRM-ViT</h2>
+          <p style="font-size:0.92rem; color:var(--muted);">Click anywhere on the slides to advance &middot; Pauses on
+            hover</p>
         </div>
 
         <div class="teaser-presentation">
 
-          <!-- Slide 1: The Problem -->
+          <!-- Slide 1: The Problem — with SVG fork diagram -->
           <div class="slide active">
-            <div class="slide-content">
-              <span class="badge badge-red">The Problem</span>
-              <h2 class="slide-title">Why Can't One Model Handle All Domains?</h2>
-              <p class="slide-text">
-                Pre-trained Vision Transformers excel on natural images, but medical imaging demands entirely different
-                visual understanding — acoustic shadows, speckle noise, motion blur, and subtle anatomical boundaries.
-                Standard fine-tuning adapts to one domain but <strong>catastrophically forgets</strong> the other.
-              </p>
-              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap; margin-top:1.5rem;">
-                <div class="flaw-card">
-                  <div class="flaw-header">
-                    <div class="flaw-num">1</div>
-                    <h4>Domain Forgetting</h4>
+            <div class="slide-content"
+              style="display:flex; align-items:center; gap:2.5rem; max-width:1050px; margin:0 auto; width:100%;">
+              <div style="flex:1; text-align:left;">
+                <span class="badge badge-red">The Problem</span>
+                <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem); margin:0.5rem 0 0.8rem;">Why Can't One Model Handle All
+                  Domains?</h2>
+                <p style="color:var(--muted); line-height:1.65; margin-bottom:1.2rem;">
+                  Pre-trained ViTs excel on natural images but struggle with medical data — acoustic shadows, speckle
+                  noise,
+                  and subtle boundaries. Standard fine-tuning adapts to one domain but <strong>catastrophically
+                    forgets</strong> the other.
+                </p>
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                  <div class="flaw-card" style="flex:1; min-width:200px;">
+                    <div class="flaw-header">
+                      <div class="flaw-num">1</div>
+                      <h4>Domain Forgetting</h4>
+                    </div>
+                    <p>Fine-tuning on medical images degrades natural benchmarks.</p>
                   </div>
-                  <p>Fine-tuning on medical images degrades accuracy on natural benchmarks (CIFAR, Caltech, etc.).</p>
-                </div>
-                <div class="flaw-card">
-                  <div class="flaw-header">
-                    <div class="flaw-num">2</div>
-                    <h4>Heavy Compute</h4>
+                  <div class="flaw-card" style="flex:1; min-width:200px;">
+                    <div class="flaw-header">
+                      <div class="flaw-num">2</div>
+                      <h4>Heavy Compute</h4>
+                    </div>
+                    <p>Full fine-tuning updates 86M+ parameters with large GPU memory.</p>
                   </div>
-                  <p>Full fine-tuning updates 86M+ parameters, requiring long training and large GPU memory.</p>
                 </div>
+              </div>
+              <div style="flex:0 0 320px; text-align:center;">
+                <!-- SVG: Fork diagram showing domain conflict -->
+                <svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:280px;">
+                  <!-- Backbone -->
+                  <rect x="90" y="10" width="100" height="36" rx="8" fill="#0f172a" />
+                  <text x="140" y="33" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="700"
+                    font-family="Inter,sans-serif">Pre-trained ViT</text>
+                  <!-- Fork lines -->
+                  <line x1="140" y1="46" x2="70" y2="90" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,3" />
+                  <line x1="140" y1="46" x2="210" y2="90" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,3" />
+                  <!-- Natural domain -->
+                  <rect x="20" y="90" width="100" height="36" rx="8" fill="#2563eb" />
+                  <text x="70" y="113" text-anchor="middle" fill="white" font-size="10" font-weight="700"
+                    font-family="Inter,sans-serif">Natural Images</text>
+                  <text x="70" y="144" text-anchor="middle" fill="#059669" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">✓ 89.2%</text>
+                  <!-- Medical domain -->
+                  <rect x="160" y="90" width="100" height="36" rx="8" fill="#059669" />
+                  <text x="210" y="113" text-anchor="middle" fill="white" font-size="10" font-weight="700"
+                    font-family="Inter,sans-serif">Medical Scans</text>
+                  <text x="210" y="144" text-anchor="middle" fill="#059669" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">✓ 89.3%</text>
+                  <!-- Conflict zone -->
+                  <rect x="55" y="165" width="170" height="44" rx="10" fill="#fef2f2" stroke="#fca5a5"
+                    stroke-width="1.5" />
+                  <text x="140" y="183" text-anchor="middle" fill="#b91c1c" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">⚠ Fine-tune for one →</text>
+                  <text x="140" y="199" text-anchor="middle" fill="#b91c1c" font-size="10" font-weight="700"
+                    font-family="Inter,sans-serif">Catastrophic forgetting of other</text>
+                  <!-- Arrow down -->
+                  <line x1="140" y1="209" x2="140" y2="240" stroke="#ef4444" stroke-width="2"
+                    marker-end="url(#arrowRed)" />
+                  <text x="140" y="255" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="800"
+                    font-family="Inter,sans-serif">Need a better solution</text>
+                  <defs>
+                    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                      orient="auto">
+                      <path d="M0,0L10,5L0,10Z" fill="#ef4444" />
+                    </marker>
+                  </defs>
+                </svg>
               </div>
             </div>
           </div>
 
-          <!-- Slide 2: Existing Approaches -->
-          <div class="slide">
-            <div class="slide-content">
-              <span class="badge badge-red">Limitations</span>
-              <h2 class="slide-title">Why Existing PEFT Methods Fall Short</h2>
-              <p class="slide-text" style="margin-bottom:1.5rem;">
-                Parameter-efficient methods (LoRA, AdaptFormer, Prompt Tuning) reduce compute, but they apply
-                <strong>static corrections</strong> — the same adaptation regardless of which domain the input belongs
-                to.
-                None of them route information dynamically based on the input sample itself.
-              </p>
-              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap;">
-                <div class="comparison-card">
-                  <h4>❌ Static PEFT</h4>
-                  <p>Fixed low-rank updates shared across all inputs. Cannot distinguish chest X-rays from natural
-                    photos at the adaptation level.</p>
-                </div>
-                <div class="comparison-card highlight">
-                  <h4>✅ DCRM-ViT</h4>
-                  <p>Input-conditioned routing generates <strong>unique</strong> residual corrections per sample.
-                    Medical and natural inputs receive different adaptations automatically.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Slide 3: The Solution -->
+          <!-- Slide 2: Static vs Dynamic — with SVG comparison -->
           <div class="slide">
             <div class="slide-content"
-              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:960px; margin:0 auto; width:100%;">
+              style="display:flex; align-items:center; gap:2.5rem; max-width:1050px; margin:0 auto; width:100%;">
+              <div style="flex:1; text-align:left;">
+                <span class="badge badge-red">Limitations</span>
+                <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem); margin:0.5rem 0 0.8rem;">Why Existing PEFT Methods Fall
+                  Short</h2>
+                <p style="color:var(--muted); line-height:1.65; margin-bottom:1rem;">
+                  LoRA, AdaptFormer, and Prompt Tuning reduce compute, but apply <strong>static corrections</strong> —
+                  the same adaptation regardless of domain. None route information dynamically.
+                </p>
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                  <div class="comparison-card" style="flex:1; min-width:190px;">
+                    <h4>❌ Static PEFT</h4>
+                    <p>Fixed low-rank updates shared across all inputs.</p>
+                  </div>
+                  <div class="comparison-card highlight" style="flex:1; min-width:190px;">
+                    <h4>✅ DCRM-ViT</h4>
+                    <p>Input-conditioned routing generates <strong>unique</strong> corrections per sample.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="flex:0 0 320px; text-align:center;">
+                <!-- SVG: Static vs Dynamic comparison -->
+                <svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:280px;">
+                  <!-- Static side -->
+                  <text x="70" y="16" text-anchor="middle" fill="#b91c1c" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">STATIC (LoRA)</text>
+                  <rect x="20" y="24" width="100" height="30" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1" />
+                  <text x="70" y="43" text-anchor="middle" fill="#b91c1c" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Same ΔW for all</text>
+                  <rect x="30" y="65" width="80" height="22" rx="4" fill="#fef2f2" stroke="#fca5a5"
+                    stroke-width="0.8" />
+                  <text x="70" y="80" text-anchor="middle" fill="#dc2626" font-size="8"
+                    font-family="Inter,sans-serif">🩻 X-ray → ΔW</text>
+                  <rect x="30" y="93" width="80" height="22" rx="4" fill="#fef2f2" stroke="#fca5a5"
+                    stroke-width="0.8" />
+                  <text x="70" y="108" text-anchor="middle" fill="#dc2626" font-size="8"
+                    font-family="Inter,sans-serif">🐕 Dog → ΔW</text>
+                  <rect x="30" y="121" width="80" height="22" rx="4" fill="#fef2f2" stroke="#fca5a5"
+                    stroke-width="0.8" />
+                  <text x="70" y="136" text-anchor="middle" fill="#dc2626" font-size="8"
+                    font-family="Inter,sans-serif">🫁 CT → ΔW</text>
+                  <!-- Dynamic side -->
+                  <text x="210" y="16" text-anchor="middle" fill="#15803d" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">DYNAMIC (Ours)</text>
+                  <rect x="160" y="24" width="100" height="30" rx="6" fill="#dcfce7" stroke="#86efac"
+                    stroke-width="1" />
+                  <text x="210" y="43" text-anchor="middle" fill="#15803d" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Unique ΔW(x)</text>
+                  <rect x="170" y="65" width="80" height="22" rx="4" fill="#f0fdf4" stroke="#86efac"
+                    stroke-width="0.8" />
+                  <text x="210" y="80" text-anchor="middle" fill="#059669" font-size="8"
+                    font-family="Inter,sans-serif">🩻 X-ray → ΔW₁</text>
+                  <rect x="170" y="93" width="80" height="22" rx="4" fill="#f0fdf4" stroke="#86efac"
+                    stroke-width="0.8" />
+                  <text x="210" y="108" text-anchor="middle" fill="#059669" font-size="8"
+                    font-family="Inter,sans-serif">🐕 Dog → ΔW₂</text>
+                  <rect x="170" y="121" width="80" height="22" rx="4" fill="#f0fdf4" stroke="#86efac"
+                    stroke-width="0.8" />
+                  <text x="210" y="136" text-anchor="middle" fill="#059669" font-size="8"
+                    font-family="Inter,sans-serif">🫁 CT → ΔW₃</text>
+                  <!-- VS divider -->
+                  <circle cx="140" cy="90" r="16" fill="#0f172a" />
+                  <text x="140" y="95" text-anchor="middle" fill="white" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">VS</text>
+                  <!-- Bottom result -->
+                  <rect x="30" y="160" width="80" height="26" rx="6" fill="#fee2e2" />
+                  <text x="70" y="177" text-anchor="middle" fill="#b91c1c" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Sub-optimal</text>
+                  <rect x="170" y="160" width="80" height="26" rx="6" fill="#dcfce7" />
+                  <text x="210" y="177" text-anchor="middle" fill="#15803d" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">State-of-the-Art</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3: The Solution with method overview figure -->
+          <div class="slide">
+            <div class="slide-content"
+              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:1050px; margin:0 auto; width:100%;">
               <div style="flex:1;">
                 <span class="badge badge-green">Our Solution</span>
                 <h2 style="font-size:clamp(1.8rem,3vw,2.6rem); color:var(--primary); margin:0.5rem 0;">DCRM-ViT</h2>
                 <h3 style="font-size:1.15rem; font-weight:500; color:var(--text); margin-bottom:1rem;">Freeze the
                   backbone. Route the adaptation.</h3>
                 <p style="color:var(--muted); line-height:1.65;">
-                  Given any input image, a <strong>Domain Router</strong> first predicts which domain mixture it belongs
-                  to. A <strong>Parameter Synthesizer</strong> then generates sample-specific low-rank residuals. These
-                  are injected via <strong>Residual Modulation Blocks</strong> into the frozen ViT — producing
-                  domain-aware features without ever updating the backbone weights.
+                  Given any input image, a <strong>Domain Router</strong> predicts which domain mixture it belongs
+                  to. A <strong>Parameter Synthesizer</strong> generates sample-specific low-rank residuals injected
+                  via <strong>Residual Modulation Blocks</strong> into the frozen ViT — producing domain-aware features
+                  without ever updating the backbone weights.
                 </p>
               </div>
               <div style="flex:1.2;">
@@ -207,82 +300,210 @@
             </div>
           </div>
 
-          <!-- Slide 4: How it works step-by-step -->
+          <!-- Slide 4: Architecture with SVG pipeline flow -->
           <div class="slide">
             <div class="slide-content">
               <span class="badge badge-blue">Architecture</span>
               <h2 class="slide-title">Three Lightweight Modules — Zero Backbone Updates</h2>
-              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap; margin-top:1.5rem;">
+              <!-- SVG pipeline flow -->
+              <div style="margin:1.5rem auto 1.2rem; max-width:900px;">
+                <svg viewBox="0 0 860 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+                  <defs>
+                    <marker id="arrowB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                      orient="auto">
+                      <path d="M0,0L10,5L0,10Z" fill="#2563eb" />
+                    </marker>
+                  </defs>
+                  <!-- Input -->
+                  <rect x="0" y="25" width="100" height="50" rx="10" fill="#f1f5f9" stroke="#dbe4ee"
+                    stroke-width="1.5" />
+                  <text x="50" y="48" text-anchor="middle" fill="#475569" font-size="10" font-weight="700"
+                    font-family="Inter,sans-serif">Input</text>
+                  <text x="50" y="62" text-anchor="middle" fill="#94a3b8" font-size="8"
+                    font-family="Inter,sans-serif">Image x</text>
+                  <!-- Arrow -->
+                  <line x1="105" y1="50" x2="145" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowB)" />
+                  <!-- Frozen backbone -->
+                  <rect x="150" y="20" width="130" height="60" rx="10" fill="#0f172a" />
+                  <text x="215" y="46" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">❄️ Frozen ViT</text>
+                  <text x="215" y="62" text-anchor="middle" fill="#94a3b8" font-size="8"
+                    font-family="Inter,sans-serif">Backbone</text>
+                  <!-- Arrow -->
+                  <line x1="285" y1="50" x2="325" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowB)" />
+                  <!-- Domain Router -->
+                  <rect x="330" y="20" width="130" height="60" rx="10" fill="#e0e7ff" stroke="#818cf8"
+                    stroke-width="1.5" />
+                  <text x="395" y="42" text-anchor="middle" fill="#4338ca" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">Domain Router</text>
+                  <text x="395" y="56" text-anchor="middle" fill="#6366f1" font-size="8"
+                    font-family="Inter,sans-serif">🔥 Soft weights</text>
+                  <text x="395" y="68" text-anchor="middle" fill="#818cf8" font-size="7"
+                    font-family="Inter,sans-serif">→ D(x)</text>
+                  <!-- Arrow -->
+                  <line x1="465" y1="50" x2="505" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowB)" />
+                  <!-- PSN -->
+                  <rect x="510" y="20" width="130" height="60" rx="10" fill="#dcfce7" stroke="#86efac"
+                    stroke-width="1.5" />
+                  <text x="575" y="42" text-anchor="middle" fill="#15803d" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">Param Synthesizer</text>
+                  <text x="575" y="56" text-anchor="middle" fill="#059669" font-size="8"
+                    font-family="Inter,sans-serif">🔥 Low-rank params</text>
+                  <text x="575" y="68" text-anchor="middle" fill="#86efac" font-size="7"
+                    font-family="Inter,sans-serif">→ P(ω, D(x))</text>
+                  <!-- Arrow -->
+                  <line x1="645" y1="50" x2="685" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowB)" />
+                  <!-- RMBs -->
+                  <rect x="690" y="20" width="160" height="60" rx="10" fill="#fef9c3" stroke="#fbbf24"
+                    stroke-width="1.5" />
+                  <text x="770" y="42" text-anchor="middle" fill="#92400e" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">Residual Mod. Blocks</text>
+                  <text x="770" y="56" text-anchor="middle" fill="#a16207" font-size="8"
+                    font-family="Inter,sans-serif">🔥 TALer + DAB</text>
+                  <text x="770" y="68" text-anchor="middle" fill="#ca8a04" font-size="7"
+                    font-family="Inter,sans-serif">→ Adapted features</text>
+                </svg>
+              </div>
+              <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
                 <div class="arch-card">
                   <div class="arch-num">1</div>
                   <h4>Domain Router</h4>
-                  <p>Predicts soft domain weights from the input features, enabling mixture-of-experts-style routing
-                    without discrete branching.</p>
+                  <p>Predicts soft domain weights from input features — mixture-of-experts-style routing without
+                    discrete branching.</p>
                 </div>
                 <div class="arch-card">
                   <div class="arch-num">2</div>
                   <h4>Parameter Synthesizer</h4>
-                  <p>Converts domain weights into unique low-rank residual parameters for each sample, ensuring
-                    input-conditioned modulation.</p>
+                  <p>Converts domain weights into unique low-rank residual parameters per sample — fully
+                    input-conditioned.</p>
                 </div>
                 <div class="arch-card">
                   <div class="arch-num">3</div>
-                  <h4>Residual Modulation Blocks</h4>
-                  <p>Lightweight adapters that attach synthesized corrections to selected transformer projections
-                    inside the frozen backbone.</p>
+                  <h4>Residual Mod. Blocks</h4>
+                  <p>Lightweight adapters that attach synthesized corrections to transformer projections inside the
+                    frozen backbone.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Slide 5: RMB Detail -->
+          <!-- Slide 5: RMB Detail with figure -->
           <div class="slide">
             <div class="slide-content"
-              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:960px; margin:0 auto; width:100%;">
+              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:1050px; margin:0 auto; width:100%;">
               <div style="flex:1; text-align:center;">
                 <img src="assets/fig-rmb-block.png"
-                  style="max-width:300px; width:100%; border-radius:12px; box-shadow:var(--shadow-md);"
+                  style="max-width:420px; width:100%; border-radius:12px; box-shadow:var(--shadow-md);"
                   alt="RMB block detail">
               </div>
-              <div style="flex:1.2;">
+              <div style="flex:1;">
                 <span class="badge badge-green">Deep Dive</span>
                 <h2 style="font-size:1.6rem; margin:0.5rem 0 0.8rem;">Residual Modulation in Detail</h2>
                 <p style="color:var(--muted); margin-bottom:0.8rem;">
-                  Each RMB contains a <strong>TALer (Task-Aligned Low-rank)</strong> unit that produces a residual
-                  correction from synthesized parameters. This correction is added to the frozen transformer's output.
+                  Each RMB contains a <strong>TALer (Task-Aligned Low-rank)</strong> unit producing residual
+                  corrections from synthesized parameters, added to the frozen transformer's output.
                 </p>
-                <p style="color:var(--muted);">
-                  Optional <strong>domain-aware attention biasing</strong> lets the model attend differently based on
-                  domain context, while gating ensures gradual integration of corrections during training.
+                <p style="color:var(--muted); margin-bottom:1rem;">
+                  Optional <strong>domain-aware attention biasing (DAB)</strong> lets the model attend differently
+                  based on domain context, while gating ensures gradual integration during training.
                 </p>
+                <!-- SVG: Component list -->
+                <svg viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:260px;">
+                  <rect x="0" y="0" width="120" height="24" rx="5" fill="#e0e7ff" />
+                  <text x="60" y="16" text-anchor="middle" fill="#4338ca" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Low-Rank Encoder</text>
+                  <rect x="130" y="0" width="120" height="24" rx="5" fill="#e0e7ff" />
+                  <text x="190" y="16" text-anchor="middle" fill="#4338ca" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Low-Rank Decoder</text>
+                  <rect x="0" y="32" width="120" height="24" rx="5" fill="#dcfce7" />
+                  <text x="60" y="48" text-anchor="middle" fill="#15803d" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">One-Gate Channel</text>
+                  <rect x="130" y="32" width="120" height="24" rx="5" fill="#dcfce7" />
+                  <text x="190" y="48" text-anchor="middle" fill="#15803d" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Re-Scaling (Rs)</text>
+                  <rect x="0" y="64" width="120" height="24" rx="5" fill="#fef9c3" />
+                  <text x="60" y="80" text-anchor="middle" fill="#a16207" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Domain-Aware Bias</text>
+                  <rect x="130" y="64" width="120" height="24" rx="5" fill="#f1f5f9" />
+                  <text x="190" y="80" text-anchor="middle" fill="#475569" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Softmax Attention</text>
+                </svg>
               </div>
             </div>
           </div>
 
-          <!-- Slide 6: Training Strategy -->
+          <!-- Slide 6: Training Strategy with SVG loop diagram -->
           <div class="slide">
-            <div class="slide-content">
-              <span class="badge badge-blue">Training</span>
-              <h2 class="slide-title">Bi-Level Optimization for Cross-Domain Generalization</h2>
-              <p class="slide-text" style="margin-bottom:1.5rem;">
-                The model separates what to learn (task-level) from how to learn it (meta-level), enabling adaptation
-                that generalizes across domains rather than overfitting to one.
-              </p>
-              <div style="display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
-                <div class="level-card">
-                  <h4>Inner Loop</h4>
-                  <p>Adapts residual modulation parameters for the current task using standard gradient descent.</p>
+            <div class="slide-content"
+              style="display:flex; align-items:center; gap:2.5rem; max-width:1050px; margin:0 auto; width:100%;">
+              <div style="flex:1; text-align:left;">
+                <span class="badge badge-blue">Training</span>
+                <h2 style="font-size:clamp(1.6rem,2.5vw,2.2rem); margin:0.5rem 0 0.8rem;">Bi-Level Optimization</h2>
+                <p style="color:var(--muted); line-height:1.65; margin-bottom:1rem;">
+                  The model separates <strong>what to learn</strong> (task-level) from <strong>how to learn it</strong>
+                  (meta-level), enabling generalization across domains.
+                </p>
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                  <div class="level-card" style="flex:1; min-width:190px;">
+                    <h4>Inner Loop</h4>
+                    <p>Adapts RMB parameters for the current task via gradient descent.</p>
+                  </div>
+                  <div class="level-card" style="flex:1; min-width:190px;">
+                    <h4>Outer Loop</h4>
+                    <p>Updates router, synthesizer, and meta-parameters so corrections generalize.</p>
+                  </div>
                 </div>
-                <div class="level-card">
-                  <h4>Outer Loop</h4>
-                  <p>Updates the domain router, synthesizer, initial residual states, and learning-rate
-                    meta-parameters so corrections transfer across domains.</p>
-                </div>
+              </div>
+              <div style="flex:0 0 300px; text-align:center;">
+                <!-- SVG: Bi-level loop diagram -->
+                <svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:280px;">
+                  <defs>
+                    <marker id="arrowO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                      orient="auto">
+                      <path d="M0,0L10,5L0,10Z" fill="#dc2626" />
+                    </marker>
+                    <marker id="arrowI" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                      orient="auto">
+                      <path d="M0,0L10,5L0,10Z" fill="#2563eb" />
+                    </marker>
+                  </defs>
+                  <!-- Outer loop arc -->
+                  <path d="M 60,40 A 100,80 0 1 1 220,40" fill="none" stroke="#dc2626" stroke-width="2.5"
+                    stroke-dasharray="6,4" marker-end="url(#arrowO)" />
+                  <text x="140" y="18" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="800"
+                    font-family="Inter,sans-serif">Outer Loop — ω, α</text>
+                  <!-- Inner loop -->
+                  <rect x="80" y="60" width="120" height="100" rx="12" fill="rgba(37,99,235,0.06)" stroke="#2563eb"
+                    stroke-width="1.5" stroke-dasharray="5,3" />
+                  <text x="140" y="80" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">Inner Loop — φ'ₜ</text>
+                  <!-- Task box -->
+                  <rect x="100" y="95" width="80" height="30" rx="6" fill="#e0e7ff" stroke="#818cf8" stroke-width="1" />
+                  <text x="140" y="114" text-anchor="middle" fill="#4338ca" font-size="9" font-weight="700"
+                    font-family="Inter,sans-serif">Task Params</text>
+                  <!-- Gradient arrow -->
+                  <line x1="140" y1="130" x2="140" y2="150" stroke="#2563eb" stroke-width="1.5"
+                    marker-end="url(#arrowI)" />
+                  <text x="140" y="167" text-anchor="middle" fill="#2563eb" font-size="8"
+                    font-family="Inter,sans-serif">∇ task loss</text>
+                  <!-- Meta boxes -->
+                  <rect x="20" y="185" width="76" height="28" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1" />
+                  <text x="58" y="203" text-anchor="middle" fill="#b91c1c" font-size="8" font-weight="700"
+                    font-family="Inter,sans-serif">Router ω</text>
+                  <rect x="102" y="185" width="76" height="28" rx="6" fill="#fee2e2" stroke="#fca5a5"
+                    stroke-width="1" />
+                  <text x="140" y="203" text-anchor="middle" fill="#b91c1c" font-size="8" font-weight="700"
+                    font-family="Inter,sans-serif">PSN θ</text>
+                  <rect x="184" y="185" width="76" height="28" rx="6" fill="#fee2e2" stroke="#fca5a5"
+                    stroke-width="1" />
+                  <text x="222" y="203" text-anchor="middle" fill="#b91c1c" font-size="8" font-weight="700"
+                    font-family="Inter,sans-serif">LR α</text>
+                </svg>
               </div>
             </div>
           </div>
 
-          <!-- Slide 7: Key Results -->
+          <!-- Slide 7: Key Results with SVG bar chart infographic -->
           <div class="slide">
             <div class="slide-content">
               <span class="badge badge-green">Key Results</span>
@@ -290,7 +511,7 @@
               <p class="slide-text" style="margin-bottom:1.5rem;">
                 DCRM-ViT sets new records across all four evaluation regimes while being the most efficient method.
               </p>
-              <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+              <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
                 <div class="result-highlight">
                   <div class="rh-value">8 / 8</div>
                   <div class="rh-label">Fine-tuning datasets won</div>
@@ -307,6 +528,25 @@
                   <div class="rh-value">335 img/s</div>
                   <div class="rh-label">Highest PEFT throughput</div>
                 </div>
+              </div>
+              <!-- SVG: Mini efficiency comparison -->
+              <div style="max-width:600px; margin:0 auto;">
+                <svg viewBox="0 0 580 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+                  <text x="0" y="12" fill="#475569" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">TRAINABLE PARAMETERS COMPARISON</text>
+                  <!-- CLIP bar -->
+                  <rect x="0" y="22" width="500" height="14" rx="3" fill="#f1f5f9" />
+                  <text x="510" y="33" fill="#94a3b8" font-size="8" font-weight="700"
+                    font-family="Inter,sans-serif">CLIP 123M</text>
+                  <!-- DINOv2 bar -->
+                  <rect x="0" y="40" width="354" height="14" rx="3" fill="#e2e8f0" />
+                  <text x="364" y="51" fill="#94a3b8" font-size="8" font-weight="700"
+                    font-family="Inter,sans-serif">DINOv2 87M</text>
+                  <!-- DCRM-ViT bar -->
+                  <rect x="0" y="58" width="14" height="14" rx="3" fill="#2563eb" />
+                  <text x="24" y="69" fill="#2563eb" font-size="9" font-weight="800"
+                    font-family="Inter,sans-serif">DCRM-ViT 3.3M ← 37× fewer params</text>
+                </svg>
               </div>
             </div>
           </div>
