@@ -26,7 +26,8 @@
     <nav class="nav">
       <a class="brand" href="#top">DCRM<span>-ViT</span></a>
       <div class="nav-links">
-        <a href="#overview">Overview</a>
+        <a href="#abstract">Abstract</a>
+        <a href="#teaser">Teaser</a>
         <a href="#method">Method</a>
         <a href="#results">Results</a>
         <a href="#ablation">Ablation</a>
@@ -46,7 +47,7 @@
         </p>
 
         <div class="authors-block">
-          <p class="authors-list" style="text-align:center;">
+          <p class="authors-list">
             Ufaq Khan<sup>1</sup> &nbsp; Umair Nawaz<sup>1</sup> &nbsp; Massimo
             Caputo<sup>2</sup> &nbsp; Muhammad Bilal<sup>3</sup> &nbsp; Junaid
             Qadir<sup>4</sup> &nbsp; Muhammad Haris Khan<sup>1</sup>
@@ -60,25 +61,10 @@
         </div>
 
         <div class="hero-actions">
-          <a class="btn btn-primary" href="assets/paper.pdf">📄 Paper PDF</a>
+          <a class="btn btn-primary" href="https://arxiv.org/abs/XXXX.XXXXX" target="_blank" rel="noopener">📄 ArXiv
+            Preprint</a>
           <a class="btn btn-secondary btn-disabled">💻 Code (coming soon)</a>
-          <a class="btn btn-secondary btn-disabled">🔗 ArXiv (coming soon)</a>
-          <a class="btn btn-secondary btn-disabled">🎬 Video (coming soon)</a>
-        </div>
-
-        <!-- Teaser Video -->
-        <div class="teaser-wrap">
-          <div class="teaser-bar">
-            <div class="teaser-dot r"></div>
-            <div class="teaser-dot y"></div>
-            <div class="teaser-dot g"></div>
-            <span>dcrm-vit-teaser.mp4</span>
-          </div>
-          <video class="teaser-video" autoplay muted loop playsinline
-            poster="assets/fig-method-overview.png">
-            <source src="assets/teaser.mp4" type="video/mp4">
-            <!-- Fallback: shows poster image -->
-          </video>
+          <a class="btn btn-secondary" href="#teaser">▶ Watch Teaser</a>
         </div>
 
         <ul class="hero-stats">
@@ -86,6 +72,7 @@
           <li><strong>335 img/s</strong><span>training throughput</span></li>
           <li><strong>0.3 min</strong><span>time per epoch</span></li>
           <li><strong>8 / 8</strong><span>fine-tuning wins</span></li>
+          <li><strong>6 / 6</strong><span>segmentation wins</span></li>
         </ul>
       </div>
     </section>
@@ -93,20 +80,257 @@
 
   <main>
 
-    <!-- ────────────────────── OVERVIEW ────────────────────── -->
-    <section class="section section-alt" id="overview">
+    <!-- ────────────────────── ABSTRACT ────────────────────── -->
+    <section class="section section-alt" id="abstract">
       <div class="container reveal">
         <div class="section-heading center">
-          <p class="section-label">Overview</p>
-          <h2>Why this problem matters</h2>
-          <p>Medical imaging presents significant challenges due to acoustic shadows, motion blur, and indistinct
-            boundaries. Adapting a single vision model across both medical and natural domains without sacrificing
-            general visual competence requires a fundamentally different approach to fine-tuning.</p>
+          <p class="section-label">Abstract</p>
+          <h2>One frozen backbone for every domain</h2>
+        </div>
+        <div class="abstract-box">
+          <p>
+            Medical imaging presents significant challenges due to acoustic shadows, motion blur, and indistinct
+            boundaries between anatomical structures. Pre-trained Vision Transformers (ViTs) offer strong
+            general-purpose
+            feature representations, but adapting them to specialized domains — particularly medical imaging — typically
+            requires extensive fine-tuning that risks degrading their original capabilities. We introduce
+            <strong>DCRM-ViT
+              (Domain-Routed Conditional Residual Modulation for Vision Transformers)</strong>, a framework that keeps
+            the
+            ViT backbone entirely frozen while learning lightweight, input-conditioned residual corrections.
+          </p>
+          <p>
+            A <strong>domain router</strong> predicts soft domain membership weights from the input features. A
+            <strong>parameter synthesizer network (PSN)</strong> converts these weights into low-rank residual
+            parameters
+            that are injected into <strong>residual modulation blocks (RMBs)</strong> attached to selected transformer
+            layers. The entire system is trained end-to-end via <strong>bi-level optimization</strong>: an inner loop
+            adapts task-specific parameters while an outer loop learns routing, synthesis, and initialization so that
+            corrections generalize across domains.
+          </p>
+          <p>
+            DCRM-ViT achieves state-of-the-art results across <strong>fine-grained classification, zero-shot
+              evaluation, cross-domain transfer, and medical image segmentation</strong> — all while adding only 3.3M
+            trainable parameters and requiring no test-time updates. The method demonstrates that domain-aware,
+            sample-level modulation of a frozen backbone is a powerful and efficient alternative to full fine-tuning.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────────────── TEASER SLIDESHOW ────────────────────── -->
+    <section class="section" id="teaser">
+      <div class="container reveal">
+        <div class="section-heading center">
+          <p class="section-label">Interactive Teaser</p>
+          <h2>A guided walkthrough of DCRM-ViT</h2>
+        </div>
+
+        <div class="teaser-presentation">
+
+          <!-- Slide 1: The Problem -->
+          <div class="slide active">
+            <div class="slide-content">
+              <span class="badge badge-red">The Problem</span>
+              <h2 class="slide-title">Why Can't One Model Handle All Domains?</h2>
+              <p class="slide-text">
+                Pre-trained Vision Transformers excel on natural images, but medical imaging demands entirely different
+                visual understanding — acoustic shadows, speckle noise, motion blur, and subtle anatomical boundaries.
+                Standard fine-tuning adapts to one domain but <strong>catastrophically forgets</strong> the other.
+              </p>
+              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap; margin-top:1.5rem;">
+                <div class="flaw-card">
+                  <div class="flaw-header">
+                    <div class="flaw-num">1</div>
+                    <h4>Domain Forgetting</h4>
+                  </div>
+                  <p>Fine-tuning on medical images degrades accuracy on natural benchmarks (CIFAR, Caltech, etc.).</p>
+                </div>
+                <div class="flaw-card">
+                  <div class="flaw-header">
+                    <div class="flaw-num">2</div>
+                    <h4>Heavy Compute</h4>
+                  </div>
+                  <p>Full fine-tuning updates 86M+ parameters, requiring long training and large GPU memory.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 2: Existing Approaches -->
+          <div class="slide">
+            <div class="slide-content">
+              <span class="badge badge-red">Limitations</span>
+              <h2 class="slide-title">Why Existing PEFT Methods Fall Short</h2>
+              <p class="slide-text" style="margin-bottom:1.5rem;">
+                Parameter-efficient methods (LoRA, AdaptFormer, Prompt Tuning) reduce compute, but they apply
+                <strong>static corrections</strong> — the same adaptation regardless of which domain the input belongs
+                to.
+                None of them route information dynamically based on the input sample itself.
+              </p>
+              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap;">
+                <div class="comparison-card">
+                  <h4>❌ Static PEFT</h4>
+                  <p>Fixed low-rank updates shared across all inputs. Cannot distinguish chest X-rays from natural
+                    photos at the adaptation level.</p>
+                </div>
+                <div class="comparison-card highlight">
+                  <h4>✅ DCRM-ViT</h4>
+                  <p>Input-conditioned routing generates <strong>unique</strong> residual corrections per sample.
+                    Medical and natural inputs receive different adaptations automatically.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3: The Solution -->
+          <div class="slide">
+            <div class="slide-content"
+              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:960px; margin:0 auto; width:100%;">
+              <div style="flex:1;">
+                <span class="badge badge-green">Our Solution</span>
+                <h2 style="font-size:clamp(1.8rem,3vw,2.6rem); color:var(--primary); margin:0.5rem 0;">DCRM-ViT</h2>
+                <h3 style="font-size:1.15rem; font-weight:500; color:var(--text); margin-bottom:1rem;">Freeze the
+                  backbone. Route the adaptation.</h3>
+                <p style="color:var(--muted); line-height:1.65;">
+                  Given any input image, a <strong>Domain Router</strong> first predicts which domain mixture it belongs
+                  to. A <strong>Parameter Synthesizer</strong> then generates sample-specific low-rank residuals. These
+                  are injected via <strong>Residual Modulation Blocks</strong> into the frozen ViT — producing
+                  domain-aware features without ever updating the backbone weights.
+                </p>
+              </div>
+              <div style="flex:1.2;">
+                <img src="assets/fig-method-overview.png"
+                  style="width:100%; border-radius:12px; box-shadow:var(--shadow-md); border:1px solid rgba(0,0,0,0.06);"
+                  alt="DCRM-ViT method overview">
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 4: How it works step-by-step -->
+          <div class="slide">
+            <div class="slide-content">
+              <span class="badge badge-blue">Architecture</span>
+              <h2 class="slide-title">Three Lightweight Modules — Zero Backbone Updates</h2>
+              <div style="display:flex; justify-content:center; gap:1.2rem; flex-wrap:wrap; margin-top:1.5rem;">
+                <div class="arch-card">
+                  <div class="arch-num">1</div>
+                  <h4>Domain Router</h4>
+                  <p>Predicts soft domain weights from the input features, enabling mixture-of-experts-style routing
+                    without discrete branching.</p>
+                </div>
+                <div class="arch-card">
+                  <div class="arch-num">2</div>
+                  <h4>Parameter Synthesizer</h4>
+                  <p>Converts domain weights into unique low-rank residual parameters for each sample, ensuring
+                    input-conditioned modulation.</p>
+                </div>
+                <div class="arch-card">
+                  <div class="arch-num">3</div>
+                  <h4>Residual Modulation Blocks</h4>
+                  <p>Lightweight adapters that attach synthesized corrections to selected transformer projections
+                    inside the frozen backbone.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 5: RMB Detail -->
+          <div class="slide">
+            <div class="slide-content"
+              style="display:flex; align-items:center; text-align:left; gap:2.5rem; max-width:960px; margin:0 auto; width:100%;">
+              <div style="flex:1; text-align:center;">
+                <img src="assets/fig-rmb-block.png"
+                  style="max-width:300px; width:100%; border-radius:12px; box-shadow:var(--shadow-md);"
+                  alt="RMB block detail">
+              </div>
+              <div style="flex:1.2;">
+                <span class="badge badge-green">Deep Dive</span>
+                <h2 style="font-size:1.6rem; margin:0.5rem 0 0.8rem;">Residual Modulation in Detail</h2>
+                <p style="color:var(--muted); margin-bottom:0.8rem;">
+                  Each RMB contains a <strong>TALer (Task-Aligned Low-rank)</strong> unit that produces a residual
+                  correction from synthesized parameters. This correction is added to the frozen transformer's output.
+                </p>
+                <p style="color:var(--muted);">
+                  Optional <strong>domain-aware attention biasing</strong> lets the model attend differently based on
+                  domain context, while gating ensures gradual integration of corrections during training.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 6: Training Strategy -->
+          <div class="slide">
+            <div class="slide-content">
+              <span class="badge badge-blue">Training</span>
+              <h2 class="slide-title">Bi-Level Optimization for Cross-Domain Generalization</h2>
+              <p class="slide-text" style="margin-bottom:1.5rem;">
+                The model separates what to learn (task-level) from how to learn it (meta-level), enabling adaptation
+                that generalizes across domains rather than overfitting to one.
+              </p>
+              <div style="display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
+                <div class="level-card">
+                  <h4>Inner Loop</h4>
+                  <p>Adapts residual modulation parameters for the current task using standard gradient descent.</p>
+                </div>
+                <div class="level-card">
+                  <h4>Outer Loop</h4>
+                  <p>Updates the domain router, synthesizer, initial residual states, and learning-rate
+                    meta-parameters so corrections transfer across domains.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 7: Key Results -->
+          <div class="slide">
+            <div class="slide-content">
+              <span class="badge badge-green">Key Results</span>
+              <h2 class="slide-title">State-of-the-Art with Only 3.3M Trainable Parameters</h2>
+              <p class="slide-text" style="margin-bottom:1.5rem;">
+                DCRM-ViT sets new records across all four evaluation regimes while being the most efficient method.
+              </p>
+              <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+                <div class="result-highlight">
+                  <div class="rh-value">8 / 8</div>
+                  <div class="rh-label">Fine-tuning datasets won</div>
+                </div>
+                <div class="result-highlight">
+                  <div class="rh-value">+3.3 pp</div>
+                  <div class="rh-label">Largest zero-shot gain</div>
+                </div>
+                <div class="result-highlight">
+                  <div class="rh-value">6 / 6</div>
+                  <div class="rh-label">Segmentation datasets won</div>
+                </div>
+                <div class="result-highlight">
+                  <div class="rh-value">335 img/s</div>
+                  <div class="rh-label">Highest PEFT throughput</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-progress">
+            <div class="progress-bar"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────────────── CHALLENGES ────────────────────── -->
+    <section class="section section-alt" id="challenges">
+      <div class="container reveal">
+        <div class="section-heading center">
+          <p class="section-label">Clinical Challenges</p>
+          <h2>What makes medical adaptation hard</h2>
+          <p>The paper targets a hard setting: adapting a single vision model across both medical and natural
+            domains without sacrificing the general visual competence of the frozen backbone.</p>
         </div>
 
         <figure class="figure-card card" style="padding:1rem;">
-          <img src="assets/fig-ultrasound-challenges.png"
-            alt="Examples of key challenges in fetal ultrasound imaging" style="border-radius:14px;">
+          <img src="assets/fig-ultrasound-challenges.png" alt="Examples of key challenges in fetal ultrasound imaging"
+            style="border-radius:14px;">
           <figcaption>Examples of fetal-ultrasound challenges: motion blur, varying pose and scale, blurry
             boundaries, speckle noise, and acoustic shadowing.</figcaption>
         </figure>
@@ -145,8 +369,7 @@
         </div>
 
         <figure class="figure-card card" style="padding:1rem; margin-bottom:2rem;">
-          <img src="assets/fig-method-overview.png"
-            alt="Overview of DCRM-ViT pipeline" style="border-radius:14px;">
+          <img src="assets/fig-method-overview.png" alt="Overview of DCRM-ViT pipeline" style="border-radius:14px;">
           <figcaption>Method overview: feature extractor, domain router module, residual modulation blocks, and
             classification head.</figcaption>
         </figure>
@@ -207,14 +430,24 @@
         <!-- Headline metrics -->
         <div class="metric-grid">
           <article class="metric-card"><span class="metric-label">Fine-tuning</span><strong>8 / 8</strong>
-            <p>Best across all datasets</p></article>
+            <p>Best across all datasets</p>
+          </article>
           <article class="metric-card"><span class="metric-label">Zero-shot best gain</span><strong>+3.3 pp</strong>
-            <p>over second-best baseline</p></article>
+            <p>over second-best baseline</p>
+          </article>
           <article class="metric-card"><span class="metric-label">Segmentation</span><strong>6 / 6</strong>
-            <p>Best Dice on all datasets</p></article>
+            <p>Best Dice on all datasets</p>
+          </article>
           <article class="metric-card"><span class="metric-label">Efficiency</span><strong>3.3M</strong>
-            <p>params, 335 img/s</p></article>
+            <p>params, 335 img/s</p>
+          </article>
         </div>
+
+        <!-- Delta chart -->
+        <figure class="figure-card card" style="padding:1rem; margin-bottom:2rem;">
+          <img src="assets/fig-teaser-delta.png" alt="Zero-shot delta chart" style="border-radius:14px;">
+          <figcaption>Zero-shot lift over the second-best baseline across natural and medical datasets.</figcaption>
+        </figure>
 
         <!-- Tab switcher -->
         <div class="table-tabs" id="resultTabs">
@@ -228,20 +461,66 @@
         <!-- Fine-tuning -->
         <div class="table-panel active" id="panel-finetune">
           <div class="results-table-wrap">
-            <p class="table-caption">DCRM-ViT reports the strongest accuracy on all eight datasets in the combined fine-tuning table.</p>
+            <p class="table-caption">DCRM-ViT reports the strongest accuracy on all eight datasets in the combined
+              fine-tuning table.</p>
             <table class="data-table">
               <thead>
-                <tr><th>Dataset</th><th>Best Baseline</th><th>DCRM-ViT</th><th>Gain</th></tr>
+                <tr>
+                  <th>Dataset</th>
+                  <th>Best Baseline</th>
+                  <th>DCRM-ViT</th>
+                  <th>Gain</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>Fpus23</td><td>LoRA — 63.0%</td><td class="best">63.4%</td><td class="gain">+0.4 pp</td></tr>
-                <tr><td>Fetal Planes</td><td>LoRA — 88.3%</td><td class="best">89.3%</td><td class="gain">+1.0 pp</td></tr>
-                <tr><td>CIFAR-10</td><td>CLIP — 88.4%</td><td class="best">89.2%</td><td class="gain">+0.8 pp</td></tr>
-                <tr><td>Caltech-101</td><td>CLIP — 84.1%</td><td class="best">85.8%</td><td class="gain">+1.7 pp</td></tr>
-                <tr><td>Natural Images</td><td>LoRA — 82.0%</td><td class="best">82.5%</td><td class="gain">+0.5 pp</td></tr>
-                <tr><td>Food101</td><td>DINOv2 — 95.1%</td><td class="best">95.7%</td><td class="gain">+0.6 pp</td></tr>
-                <tr><td>SUN397</td><td>DINOv2 — 80.6%</td><td class="best">81.3%</td><td class="gain">+0.7 pp</td></tr>
-                <tr><td>Stanford Cars</td><td>DINOv2 — 90.8%</td><td class="best">91.5%</td><td class="gain">+0.7 pp</td></tr>
+                <tr>
+                  <td>Fpus23</td>
+                  <td>LoRA — 63.0%</td>
+                  <td class="best">63.4%</td>
+                  <td class="gain">+0.4 pp</td>
+                </tr>
+                <tr>
+                  <td>Fetal Planes</td>
+                  <td>LoRA — 88.3%</td>
+                  <td class="best">89.3%</td>
+                  <td class="gain">+1.0 pp</td>
+                </tr>
+                <tr>
+                  <td>CIFAR-10</td>
+                  <td>CLIP — 88.4%</td>
+                  <td class="best">89.2%</td>
+                  <td class="gain">+0.8 pp</td>
+                </tr>
+                <tr>
+                  <td>Caltech-101</td>
+                  <td>CLIP — 84.1%</td>
+                  <td class="best">85.8%</td>
+                  <td class="gain">+1.7 pp</td>
+                </tr>
+                <tr>
+                  <td>Natural Images</td>
+                  <td>LoRA — 82.0%</td>
+                  <td class="best">82.5%</td>
+                  <td class="gain">+0.5 pp</td>
+                </tr>
+                <tr>
+                  <td>Food101</td>
+                  <td>DINOv2 — 95.1%</td>
+                  <td class="best">95.7%</td>
+                  <td class="gain">+0.6 pp</td>
+                </tr>
+                <tr>
+                  <td>SUN397</td>
+                  <td>DINOv2 — 80.6%</td>
+                  <td class="best">81.3%</td>
+                  <td class="gain">+0.7 pp</td>
+                </tr>
+                <tr>
+                  <td>Stanford Cars</td>
+                  <td>DINOv2 — 90.8%</td>
+                  <td class="best">91.5%</td>
+                  <td class="gain">+0.7 pp</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -250,20 +529,66 @@
         <!-- Zero-shot -->
         <div class="table-panel" id="panel-zeroshot">
           <div class="results-table-wrap">
-            <p class="table-caption">Largest zero-shot margin on Caltech-101 and CIFAR-10, with solid results on fetal data.</p>
+            <p class="table-caption">Largest zero-shot margin on Caltech-101 and CIFAR-10, with solid results on fetal
+              data.</p>
             <table class="data-table">
               <thead>
-                <tr><th>Dataset</th><th>Best Baseline</th><th>DCRM-ViT</th><th>Gain</th></tr>
+                <tr>
+                  <th>Dataset</th>
+                  <th>Best Baseline</th>
+                  <th>DCRM-ViT</th>
+                  <th>Gain</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>CIFAR-10</td><td>CLIP — 71.9%</td><td class="best">75.2%</td><td class="gain">+3.3 pp</td></tr>
-                <tr><td>Caltech-101</td><td>LoRA — 69.2%</td><td class="best">72.5%</td><td class="gain">+3.3 pp</td></tr>
-                <tr><td>Natural Images</td><td>CLIP — 71.0%</td><td class="best">71.9%</td><td class="gain">+0.9 pp</td></tr>
-                <tr><td>Food101</td><td>Tip-Adapter — 89.4%</td><td class="best">90.9%</td><td class="gain">+1.5 pp</td></tr>
-                <tr><td>SUN397</td><td>Tip-Adapter — 63.1%</td><td class="best">63.3%</td><td class="gain">+0.2 pp</td></tr>
-                <tr><td>Stanford Cars</td><td>Tip-Adapter — 71.1%</td><td class="best">74.0%</td><td class="gain">+2.9 pp</td></tr>
-                <tr><td>Fpus23</td><td>DINOv2 — 28.9%</td><td class="best">30.3%</td><td class="gain">+1.4 pp</td></tr>
-                <tr><td>Fetal Planes</td><td>BioMedCLIP — 30.9%</td><td class="best">32.8%</td><td class="gain">+1.9 pp</td></tr>
+                <tr>
+                  <td>CIFAR-10</td>
+                  <td>CLIP — 71.9%</td>
+                  <td class="best">75.2%</td>
+                  <td class="gain">+3.3 pp</td>
+                </tr>
+                <tr>
+                  <td>Caltech-101</td>
+                  <td>LoRA — 69.2%</td>
+                  <td class="best">72.5%</td>
+                  <td class="gain">+3.3 pp</td>
+                </tr>
+                <tr>
+                  <td>Natural Images</td>
+                  <td>CLIP — 71.0%</td>
+                  <td class="best">71.9%</td>
+                  <td class="gain">+0.9 pp</td>
+                </tr>
+                <tr>
+                  <td>Food101</td>
+                  <td>Tip-Adapter — 89.4%</td>
+                  <td class="best">90.9%</td>
+                  <td class="gain">+1.5 pp</td>
+                </tr>
+                <tr>
+                  <td>SUN397</td>
+                  <td>Tip-Adapter — 63.1%</td>
+                  <td class="best">63.3%</td>
+                  <td class="gain">+0.2 pp</td>
+                </tr>
+                <tr>
+                  <td>Stanford Cars</td>
+                  <td>Tip-Adapter — 71.1%</td>
+                  <td class="best">74.0%</td>
+                  <td class="gain">+2.9 pp</td>
+                </tr>
+                <tr>
+                  <td>Fpus23</td>
+                  <td>DINOv2 — 28.9%</td>
+                  <td class="best">30.3%</td>
+                  <td class="gain">+1.4 pp</td>
+                </tr>
+                <tr>
+                  <td>Fetal Planes</td>
+                  <td>BioMedCLIP — 30.9%</td>
+                  <td class="best">32.8%</td>
+                  <td class="gain">+1.9 pp</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -275,15 +600,50 @@
             <p class="table-caption">Best Dice score on all six reported medical segmentation datasets.</p>
             <table class="data-table">
               <thead>
-                <tr><th>Dataset</th><th>Strong Baseline</th><th>DCRM-ViT</th><th>Gain</th></tr>
+                <tr>
+                  <th>Dataset</th>
+                  <th>Strong Baseline</th>
+                  <th>DCRM-ViT</th>
+                  <th>Gain</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>BUS-UCLM</td><td>SAMUS — 0.817</td><td class="best">0.862</td><td class="gain">+0.045</td></tr>
-                <tr><td>BUID</td><td>SAMUS — 0.774</td><td class="best">0.789</td><td class="gain">+0.015</td></tr>
-                <tr><td>BUS-BRA</td><td>SAMUS — 0.802</td><td class="best">0.834</td><td class="gain">+0.032</td></tr>
-                <tr><td>ACDC</td><td>SAMUS — 0.905</td><td class="best">0.928</td><td class="gain">+0.023</td></tr>
-                <tr><td>MMWHS-CT</td><td>SAMUS — 0.861</td><td class="best">0.880</td><td class="gain">+0.019</td></tr>
-                <tr><td>MMWHS-MRI</td><td>SAMUS — 0.831</td><td class="best">0.856</td><td class="gain">+0.025</td></tr>
+                <tr>
+                  <td>BUS-UCLM</td>
+                  <td>SAMUS — 0.817</td>
+                  <td class="best">0.862</td>
+                  <td class="gain">+0.045</td>
+                </tr>
+                <tr>
+                  <td>BUID</td>
+                  <td>SAMUS — 0.774</td>
+                  <td class="best">0.789</td>
+                  <td class="gain">+0.015</td>
+                </tr>
+                <tr>
+                  <td>BUS-BRA</td>
+                  <td>SAMUS — 0.802</td>
+                  <td class="best">0.834</td>
+                  <td class="gain">+0.032</td>
+                </tr>
+                <tr>
+                  <td>ACDC</td>
+                  <td>SAMUS — 0.905</td>
+                  <td class="best">0.928</td>
+                  <td class="gain">+0.023</td>
+                </tr>
+                <tr>
+                  <td>MMWHS-CT</td>
+                  <td>SAMUS — 0.861</td>
+                  <td class="best">0.880</td>
+                  <td class="gain">+0.019</td>
+                </tr>
+                <tr>
+                  <td>MMWHS-MRI</td>
+                  <td>SAMUS — 0.831</td>
+                  <td class="best">0.856</td>
+                  <td class="gain">+0.025</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -292,17 +652,48 @@
         <!-- Cross-domain -->
         <div class="table-panel" id="panel-crossdomain">
           <div class="results-table-wrap">
-            <p class="table-caption">The model remains competitive when trained on one regime and evaluated on another.</p>
+            <p class="table-caption">The model remains competitive when trained on one regime and evaluated on another.
+            </p>
             <table class="data-table">
               <thead>
-                <tr><th>Transfer Setting</th><th>Best Baseline</th><th>DCRM-ViT</th><th>Gain</th></tr>
+                <tr>
+                  <th>Transfer Setting</th>
+                  <th>Best Baseline</th>
+                  <th>DCRM-ViT</th>
+                  <th>Gain</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>Fetal → CIFAR-10</td><td>CLIP — 60.2%</td><td class="best">63.7%</td><td class="gain">+3.5 pp</td></tr>
-                <tr><td>Fetal → Caltech-101</td><td>CLIP — 62.3%</td><td class="best">65.8%</td><td class="gain">+3.5 pp</td></tr>
-                <tr><td>Fetal → Natural Images</td><td>CLIP — 58.9%</td><td class="best">61.5%</td><td class="gain">+2.6 pp</td></tr>
-                <tr><td>Natural → Fpus23</td><td>CLIP — 55.9%</td><td class="best">58.4%</td><td class="gain">+2.5 pp</td></tr>
-                <tr><td>Natural → Fetal Planes</td><td>CLIP — 67.1%</td><td class="best">70.2%</td><td class="gain">+3.1 pp</td></tr>
+                <tr>
+                  <td>Fetal → CIFAR-10</td>
+                  <td>CLIP — 60.2%</td>
+                  <td class="best">63.7%</td>
+                  <td class="gain">+3.5 pp</td>
+                </tr>
+                <tr>
+                  <td>Fetal → Caltech-101</td>
+                  <td>CLIP — 62.3%</td>
+                  <td class="best">65.8%</td>
+                  <td class="gain">+3.5 pp</td>
+                </tr>
+                <tr>
+                  <td>Fetal → Natural Images</td>
+                  <td>CLIP — 58.9%</td>
+                  <td class="best">61.5%</td>
+                  <td class="gain">+2.6 pp</td>
+                </tr>
+                <tr>
+                  <td>Natural → Fpus23</td>
+                  <td>CLIP — 55.9%</td>
+                  <td class="best">58.4%</td>
+                  <td class="gain">+2.5 pp</td>
+                </tr>
+                <tr>
+                  <td>Natural → Fetal Planes</td>
+                  <td>CLIP — 67.1%</td>
+                  <td class="best">70.2%</td>
+                  <td class="gain">+3.1 pp</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -311,18 +702,54 @@
         <!-- Efficiency -->
         <div class="table-panel" id="panel-efficiency">
           <div class="results-table-wrap">
-            <p class="table-caption">DCRM-ViT achieves highest throughput with fewest trainable parameters among PEFT baselines.</p>
+            <p class="table-caption">DCRM-ViT achieves highest throughput with fewest trainable parameters among PEFT
+              baselines.</p>
             <table class="data-table">
               <thead>
-                <tr><th>Model</th><th>Trainable Params</th><th>Throughput</th><th>Time / Epoch</th></tr>
+                <tr>
+                  <th>Model</th>
+                  <th>Trainable Params</th>
+                  <th>Throughput</th>
+                  <th>Time / Epoch</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>AdaptFormer</td><td>4.6M</td><td>298 img/s</td><td>0.5 min</td></tr>
-                <tr><td>LoRA</td><td>5.5M</td><td>308 img/s</td><td>0.45 min</td></tr>
-                <tr><td style="color:var(--primary-2); font-weight:800">DCRM-ViT</td><td class="best">3.3M</td><td class="best">335 img/s</td><td class="best">0.3 min</td></tr>
-                <tr><td>MAE</td><td>86.0M</td><td>220 img/s</td><td>0.9 min</td></tr>
-                <tr><td>DINOv2</td><td>87.0M</td><td>210 img/s</td><td>1.0 min</td></tr>
-                <tr><td>CLIP</td><td>123.0M</td><td>205 img/s</td><td>3.0 min</td></tr>
+                <tr>
+                  <td>AdaptFormer</td>
+                  <td>4.6M</td>
+                  <td>298 img/s</td>
+                  <td>0.5 min</td>
+                </tr>
+                <tr>
+                  <td>LoRA</td>
+                  <td>5.5M</td>
+                  <td>308 img/s</td>
+                  <td>0.45 min</td>
+                </tr>
+                <tr>
+                  <td style="color:var(--primary-2); font-weight:800">DCRM-ViT</td>
+                  <td class="best">3.3M</td>
+                  <td class="best">335 img/s</td>
+                  <td class="best">0.3 min</td>
+                </tr>
+                <tr>
+                  <td>MAE</td>
+                  <td>86.0M</td>
+                  <td>220 img/s</td>
+                  <td>0.9 min</td>
+                </tr>
+                <tr>
+                  <td>DINOv2</td>
+                  <td>87.0M</td>
+                  <td>210 img/s</td>
+                  <td>1.0 min</td>
+                </tr>
+                <tr>
+                  <td>CLIP</td>
+                  <td>123.0M</td>
+                  <td>205 img/s</td>
+                  <td>3.0 min</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -353,7 +780,8 @@
             <span class="metric-label">Core component</span>
             <h3>PSN matters for dynamic synthesis</h3>
             <div class="value">59.1% / 85.7%</div>
-            <p>Without the parameter synthesizer network, performance drops on both fetal datasets compared with the full
+            <p>Without the parameter synthesizer network, performance drops on both fetal datasets compared with the
+              full
               method.</p>
           </article>
           <article class="ablation-card">
